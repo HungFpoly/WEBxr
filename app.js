@@ -1,6 +1,6 @@
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js';
 
-let camera, scene, renderer, cube;
+let camera, scene, renderer, cube, controller;
 
 init();
 animate();
@@ -24,7 +24,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Handle XR
+    // XR
     if ('xr' in navigator) {
         navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
             if (supported) {
@@ -32,6 +32,13 @@ function init() {
             }
         });
     }
+
+    // XR Controller
+    controller = renderer.xr.getController(0);
+    scene.add(controller);
+
+    controller.addEventListener('selectstart', onSelectStart);
+    controller.addEventListener('selectend', onSelectEnd);
 }
 
 function animate() {
@@ -43,6 +50,15 @@ function render() {
     cube.rotation.y += 0.01;
 
     renderer.render(scene, camera);
+}
+
+function onSelectStart() {
+    const cubeColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+    cube.material.color.copy(cubeColor);
+}
+
+function onSelectEnd() {
+    // Handle selection end if needed
 }
 
 function buildARButton() {
@@ -62,9 +78,10 @@ function buildARButton() {
 }
 
 let sessionInitiated = false;
+let xrSession;
 
 async function initXR() {
-    const xrSession = await navigator.xr.requestSession('immersive-ar', {
+    xrSession = await navigator.xr.requestSession('immersive-ar', {
         optionalFeatures: ['dom-overlay'],
         domOverlay: { root: document.body }
     });
@@ -95,7 +112,6 @@ function onXRFrame(time, xrFrame) {
         const view = pose.views[0];
         const viewport = xrLayer.getViewport(view);
         renderer.setSize(viewport.width, viewport.height);
+        xrSession.requestAnimationFrame(onXRFrame);
     }
-
-    xrSession.requestAnimationFrame(onXRFrame);
 }
