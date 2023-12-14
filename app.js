@@ -31,6 +31,7 @@ function init() {
     controller.addEventListener('selectstart', onSelectStart);
     controller.addEventListener('selectend', onSelectEnd);
 
+    document.body.addEventListener('touchstart', onTouchStart); // Listen for touch event
     document.body.appendChild(buildARButton());
 }
 
@@ -54,6 +55,13 @@ function onSelectEnd() {
     // Handle selection end if needed
 }
 
+function onTouchStart() {
+    if (!sessionInitiated) {
+        sessionInitiated = true;
+        initXR();
+    }
+}
+
 function buildARButton() {
     const button = document.createElement('button');
     button.textContent = 'Enter AR';
@@ -61,11 +69,7 @@ function buildARButton() {
     button.style.top = '10px';
     button.style.left = '10px';
     button.style.zIndex = '100';
-    button.addEventListener('click', () => {
-        if (sessionInitiated) return;
-        sessionInitiated = true;
-        initXR();
-    });
+    button.addEventListener('click', onTouchStart); // Trigger AR when the button is clicked
 
     return button;
 }
