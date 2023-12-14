@@ -31,7 +31,7 @@ function init() {
     controller.addEventListener('selectstart', onSelectStart);
     controller.addEventListener('selectend', onSelectEnd);
 
-    document.body.addEventListener('touchstart', onTouchStart); // Listen for touch event
+    document.body.addEventListener('click', onTouchStart); // Listen for click event
     document.body.appendChild(buildARButton());
 }
 
@@ -80,7 +80,8 @@ let xrSession;
 async function initXR() {
     if ('xr' in navigator) {
         xrSession = await navigator.xr.requestSession('immersive-ar', {
-            requiredFeatures: ['hit-test']
+            optionalFeatures: ['dom-overlay'],
+            domOverlay: { root: document.body }
         });
 
         xrSession.addEventListener('end', onXRSessionEnd);
