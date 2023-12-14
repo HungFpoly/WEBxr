@@ -24,21 +24,14 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // XR
-    if ('xr' in navigator) {
-        navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-            if (supported) {
-                document.body.appendChild(buildARButton());
-            }
-        });
-    }
-
     // XR Controller
     controller = renderer.xr.getController(0);
     scene.add(controller);
 
     controller.addEventListener('selectstart', onSelectStart);
     controller.addEventListener('selectend', onSelectEnd);
+
+    document.body.appendChild(buildARButton());
 }
 
 function animate() {
@@ -81,28 +74,30 @@ let sessionInitiated = false;
 let xrSession;
 
 async function initXR() {
-    xrSession = await navigator.xr.requestSession('immersive-ar', {
-        optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.body }
-    });
+    if ('xr' in navigator) {
+        xrSession = await navigator.xr.requestSession('immersive-ar', {
+            optionalFeatures: ['dom-overlay'],
+            domOverlay: { root: document.body }
+        });
 
-    xrSession.addEventListener('end', onXRSessionEnd);
+        xrSession.addEventListener('end', onXRSessionEnd);
 
-    const xrReferenceSpace = await xrSession.requestReferenceSpace('local');
+        const xrReferenceSpace = await xrSession.requestReferenceSpace('local');
 
-    const xrFrameOfRef = await xrSession.requestAnimationFrame(onXRFrame);
+        const xrFrameOfRef = await xrSession.requestAnimationFrame(onXRFrame);
 
-    const xrLayer = new XRWebGLLayer(xrSession, renderer);
+        const xrLayer = new XRWebGLLayer(xrSession, renderer);
 
-    xrSession.updateRenderState({ baseLayer: xrLayer });
-    xrSession.requestAnimationFrame(onXRFrame);
+        xrSession.updateRenderState({ baseLayer: xrLayer });
+        xrSession.requestAnimationFrame(onXRFrame);
 
-    document.body.appendChild(xrButton);
+        document.body.removeChild(arButton); // Remove the button after entering AR
+    }
 }
 
 function onXRSessionEnd() {
     sessionInitiated = false;
-    document.body.removeChild(xrButton);
+    // Handle session end if needed
 }
 
 function onXRFrame(time, xrFrame) {
