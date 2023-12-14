@@ -80,13 +80,13 @@ let xrSession;
 async function initXR() {
     if ('xr' in navigator) {
         xrSession = await navigator.xr.requestSession('immersive-ar', {
-            optionalFeatures: ['dom-overlay'],
-            domOverlay: { root: document.body }
+            requiredFeatures: ['hit-test']
         });
 
         xrSession.addEventListener('end', onXRSessionEnd);
 
         const xrReferenceSpace = await xrSession.requestReferenceSpace('local');
+        const xrHitTestSource = await xrSession.requestHitTestSource({ space: xrReferenceSpace });
 
         const xrFrameOfRef = await xrSession.requestAnimationFrame(onXRFrame);
 
@@ -111,6 +111,14 @@ function onXRFrame(time, xrFrame) {
         const view = pose.views[0];
         const viewport = xrLayer.getViewport(view);
         renderer.setSize(viewport.width, viewport.height);
+
+        // Update cube position based on hit test
+        const hitTestResults = xrFrame.getHitTestResults(xrHitTestSource);
+        if (hitTestResults.length > 0) {
+            const hitPose = hitTestResults[0].getPose(xrReferenceSpace);
+            cube.position.set(hitPose.transform.position.x, hitPose.transform.position.y, hitPose.transform.position.z);
+        }
+
         xrSession.requestAnimationFrame(onXRFrame);
     }
 }
